@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 import os
 import time
-#print "hello"
-#os.system('pwd')
-
+import json
+from OpenWeatherMap import OpenWeatherMap
 
 import picamera                        # カメラ用モジュール
 import picamera.array                  # カメラ用モジュール
 import cv2                             # Open CVモジュール    
 import bezelie                         # べゼリー専用サーボ制御モジュール
+
+with open("config.json","r") as f:
+  config = json.load(f)
+  API_KEY = config['OpenWeatherMap']['API_KEY']
+  ZIP = config['OpenWeatherMap']['ZIP']
 
 cascade_path =  "/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml" # 顔認識xml
 cascade = cv2.CascadeClassifier(cascade_path)
@@ -18,6 +22,9 @@ cascade = cv2.CascadeClassifier(cascade_path)
 bez = bezelie.Control()               # べゼリー操作インスタンスの生成
 bez.moveCenter()                      # サーボをセンタリング
 #bez.movePitch(id=1,degree=-20,speed=1)
+
+# 温度調査
+owm = OpenWeatherMap(API_KEY,ZIP)
 
 # メインループ
 def main():
@@ -32,8 +39,12 @@ def main():
         if greetingMode == True:
           os.system('./exec_talkJpn.sh "おはようございます"')
           bez.pitchUpDwonLong(id=1)
-          os.system('./exec_talkJpn.sh "本日は快晴です"')
-          time.sleep(3)
+          # os.system('./exec_talkJpn.sh "本日は快晴です"')
+          if owm.get() :
+            os.system('./exec_talkJpn.sh "本日は雨が降るかもしれないので、傘を持っていってくださいね"')
+          else :
+            os.system('./exec_talkJpn.sh "本日は快晴です、いってらっしゃいませ"')
+          # time.sleep(3)
           greetingMode = False
         else:
           camera.capture(stream, 'bgr', use_video_port=True)    # Capture the Video Stream
