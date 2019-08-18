@@ -4,6 +4,7 @@ import os
 import time
 import json
 from OpenWeatherMap import OpenWeatherMap
+from ThingSpeak import ThingSpeak
 
 import picamera                        # カメラ用モジュール
 import picamera.array                  # カメラ用モジュール
@@ -12,8 +13,12 @@ import bezelie                         # べゼリー専用サーボ制御モジ
 
 with open("config.json","r") as f:
   config = json.load(f)
-  API_KEY = config['OpenWeatherMap']['API_KEY']
-  ZIP = config['OpenWeatherMap']['ZIP']
+  OWM_API_KEY = config['OpenWeatherMap']['API_KEY']
+  OWM_ZIP = config['OpenWeatherMap']['ZIP']
+  TS_API_KEY = config['ThingSpeak']['API_KEY']
+  TS_ID = config['ThingSpeak']['ID']
+  TS_MAX_DISTANCE = config['ThingSpeak']['MAX_DISTANCE']
+  TS_MIN_DISTANCE = config['ThingSpeak']['MIN_DISTANCE']
 
 cascade_path =  "/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml" # 顔認識xml
 cascade = cv2.CascadeClassifier(cascade_path)
@@ -23,13 +28,14 @@ bez = bezelie.Control()               # べゼリー操作インスタンスの�
 bez.moveCenter()                      # サーボをセンタリング
 #bez.movePitch(id=1,degree=-20,speed=1)
 
-# 温度調査
-owm = OpenWeatherMap(API_KEY,ZIP)
+# 天気の取得
+owm = OpenWeatherMap(OWM_API_KEY,OWM_ZIP)
+# ゴミの有無の取得
+ts = ThingSpeak(TS_API_KEY,TS_ID,TS_MAX_DISTANCE,TS_MIN_DISTANCE)
 
 # メインループ
 def main():
   greetingMode = False
-  #os.system('./exec_talkJpn.sh "ベゼリー、起動します"')
   with picamera.PiCamera() as camera:                         # Open Pi-Camera as camera
     with picamera.array.PiRGBArray(camera) as stream:         # Open Video Stream from Pi-Camera as stream
       camera.resolution = (640, 480)                          # Display Resolution
@@ -44,6 +50,8 @@ def main():
             os.system('./exec_talkJpn.sh "本日は雨が降るかもしれないので、傘を持っていってくださいね"')
           else :
             os.system('./exec_talkJpn.sh "本日は快晴です、いってらっしゃいませ"')
+          if ts.existTrashBox() :
+            os.system('./exec_talkJpn.sh "燃えるゴミがあるので、ゴミ捨て場に持っていってね"')
           # time.sleep(3)
           greetingMode = False
         else:
