@@ -3,6 +3,7 @@
 import os
 import time
 import json
+import datetime
 from OpenWeatherMap import OpenWeatherMap
 from ThingSpeak import ThingSpeak
 
@@ -45,13 +46,13 @@ def main():
         if greetingMode == True:
           os.system('./exec_talkJpn.sh "おはようございます"')
           bez.pitchUpDwonLong(id=1)
-          # os.system('./exec_talkJpn.sh "本日は快晴です"')
+          weekday = datetime.date.today().weekday()
+          if ts.existTrashBox() and (weekday == 0 or weekday == 3): # 月曜か木曜でゴミがあれば、ゴミを持っていくことを促す
+            os.system('./exec_talkJpn.sh "燃えるゴミがあるので、ゴミ捨て場に持っていってね"')
           if owm.get() :
             os.system('./exec_talkJpn.sh "本日は雨が降るかもしれないので、傘を持っていってくださいね"')
           else :
             os.system('./exec_talkJpn.sh "本日は快晴です、いってらっしゃいませ"')
-          if ts.existTrashBox() :
-            os.system('./exec_talkJpn.sh "燃えるゴミがあるので、ゴミ捨て場に持っていってね"')
           # time.sleep(3)
           greetingMode = False
         else:

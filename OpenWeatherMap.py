@@ -32,7 +32,10 @@ class OpenWeatherMap :
         for item in self.forecastData['list']:
             forecastDatetime = timezone('Asia/Tokyo').localize(datetime.datetime.fromtimestamp(item['dt']))
             weatherDescription = item['weather'][0]['description']
+            print(weatherDescription)
             if dt_now.year == forecastDatetime.year and dt_now.month == forecastDatetime.month and dt_now.day == forecastDatetime.day :
-                if '雨' in weatherDescription :
+                if '小雨' in weatherDescription :
+                    print("小雨なので評価しない")
+                elif '雨' in weatherDescription :
                     return True
         return False
